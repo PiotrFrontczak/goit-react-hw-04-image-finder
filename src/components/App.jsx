@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import axios from 'axios';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
 import Loader from './Loader';
 import Button from './Button';
 import Modal from './Modal';
+import './styles.css';
 
 const API_KEY = '43689937-ac603d3a8790355bd35895aa3';
 
@@ -22,9 +25,17 @@ const App = () => {
     const fetchImages = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`https://api.example.com/?q=${searchQuery}&page=${page}`);
-        const data = await response.json();
-        setImages(prevImages => [...prevImages, ...data.hits]);
+        const response = await axios.get(`https://pixabay.com/api/`, {
+          params: {
+            q: searchQuery,
+            page: page,
+            key: API_KEY,
+            image_type: 'photo',
+            orientation: 'horizontal',
+            per_page: 12,
+          },
+        });
+        setImages(prevImages => [...prevImages, ...response.data.hits]);
       } catch (error) {
         setError(error.message);
       } finally {
@@ -60,6 +71,22 @@ const App = () => {
       {showModal && <Modal largeImageURL={largeImageURL} onClose={toggleModal} />}
     </div>
   );
+};
+
+App.propTypes = {
+  images: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      webformatURL: PropTypes.string.isRequired,
+      largeImageURL: PropTypes.string.isRequired,
+    })
+  ),
+  isLoading: PropTypes.bool,
+  error: PropTypes.string,
+  searchQuery: PropTypes.string,
+  page: PropTypes.number,
+  showModal: PropTypes.bool,
+  largeImageURL: PropTypes.string,
 };
 
 export default App;
